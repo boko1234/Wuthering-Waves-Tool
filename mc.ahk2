@@ -1,0 +1,280 @@
+; v2 版本
+
+#Requires AutoHotkey v2.0
+
+CoordMode("Pixel", "Client")  ; 确保 PixelGetColor 使用屏幕坐标模式
+CoordMode("ToolTip", "Client")
+Persistent(true) ; 使脚本在后台运行
+#SingleInstance force ; 确保只有一个实例运行
+ProcessSetPriority("High")  ; 提升进程优先级
+
+
+
+
+
+
+
+
+
+
+v_m := false
+v_x := false
+v_g := false
+
+tips_x := 500
+tips_y := 1000
+tips_step := 30
+
+id := 0
+id_x := 1
+id_f := 2
+id_m := 3
+id_Mr := 4
+id_f4 := 5
+id_f1 := 6
+id_test := 10
+
+
+
+
+GetColor(x, y) {
+    color := PixelGetColor(x, y, "RGB")
+    return color
+}
+GetId() {
+    global id
+    id := id + 1
+    return id
+}
+
+FuncSendF() {
+    KeyWait("Alt")
+    KeyWait("Shift")
+    KeyWait("Tab")
+    Send("{f}{WheelDown}")
+}
+
+FuncClick() {
+    Click()
+}
+
+FuncClickR() {
+    Click()
+}
+
+; 查询指定颜色进行操作
+/* 
+
+
+
+*/
+FuncSearchM() {
+    if (GetColor(1600,551)=="0xDFD885" 
+        or GetColor(1097,165)=="0xC1A051" 
+        or GetColor(1601,399)=="0xDFD885"
+        or GetColor(1600,740)=="0xDFD985"
+    ){
+        MouseMove(1400,864)
+    }
+    if (GetColor(1337,844)=="0x3C3C3C"){
+        Click(1400,864)
+        SwitchStateM()
+    } else if (GetColor(1482,875)=="0x3C3C3C"){
+        Click()
+        Sleep(500)
+        Click(1065,592)
+        SwitchStateM()
+    }
+}
+
+FuncEsc() {
+    Send("{Esc}")
+    Sleep(800)
+    Click(67,892)
+    Sleep(500)
+    Click(1094,593)
+}
+
+SwitchStateX(t := 100) {
+    global v_x 
+    v_x := !v_x
+    if (v_x) {
+        SetTimer(FuncClick, t, id_x)
+        ToolTip("x", tips_x+tips_step*id_x, tips_y, id_x)
+    } else {
+        SetTimer(FuncClick, 0, id_x)
+        ToolTip("", 0, 0, id_x)
+    }
+}
+
+SwitchStateF() {
+    global v_g
+    v_g := !v_g
+    if (v_g) {
+        SetTimer(FuncSendF, 100, id_f)
+        ToolTip("f", tips_x+tips_step*id_f, tips_y, id_f)
+    } else {
+        SetTimer(FuncSendF, 0, id_f)
+        ToolTip("", 0, 0, id_f)
+    }
+}
+
+SwitchStateM() {
+    global v_m
+    v_m := !v_m
+    if (v_m) {
+        SetTimer(FuncSearchM, 100, id_m)
+        ToolTip("m", tips_x+tips_step*id_m, tips_y, id_m)
+    } else {
+        SetTimer(FuncSearchM, 0, id_m)
+        ToolTip("", 0, 0, id_m)
+    }
+}
+
+
+CloseAll() {
+    global v_x, v_g, v_m
+    if (v_x) {
+        SwitchStateX()
+    }
+    if (v_g) {
+        SwitchStateF()
+    }
+    if (v_m) {
+        SwitchStateM()
+    }
+    ToolTip("", 0, 0, id_f1)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+; ------------------------------------------------全局快捷键
+; 不阻止自身事件，并解除其他指定窗口的定时器，初始化定时器状态
+; 全局快捷键，并且不会因为脚本停止而失效 防止脚本失控
+; *	通配符: 即使额外的修饰键被按住也能触发热键. 这常与重映射按键或按钮组合使用.
+; ~	触发热键时, 热键中按键原有的功能不会被屏蔽(对操作系统隐藏). 在下面的两个例子中, 用户的鼠标按钮点击会被发送到活动窗口:
+; $	通常只在脚本使用 Send 函数发送包含了热键自身的按键时才需要使用此符号, 此时可以避免触发它自己. $ 前缀强制使用键盘钩子来实现此热键, 作为副作用这样阻止了 Send 函数触发它自己. $ 前缀相当于在此热键定义之前的某个位置指定了 #UseHook.
+
+
+#SuspendExempt 
+$~Esc UP::{
+    CloseAll()
+}
+F8 UP::{
+    Suspend
+    if (A_IsSuspended) {
+        CloseAll()
+        ToolTip("Suspend", 850, 50, id_f4)
+    } else {
+        ToolTip("", 0, 0, id_f4)
+    }
+}
+#SuspendExempt false
+
+; 普通全局快捷键
+F12 UP::{
+    Reload()
+}
+
+
+; 获取指定位置颜色
+^F1::{
+    MouseGetPos(&x, &y)
+    color := GetColor(x, y)
+    text := "GetColor(" x ", " y ") == " color ""
+    ToolTip(text, x+12, y+12, id_f1)
+    A_Clipboard := text
+}
+
+
+
+
+
+
+
+
+
+
+; #HotIf WinActive("ahk_exe Code.exe")
+#HotIf WinActive("ahk_exe Client-Win64-Shipping.exe")
+
+
+6::
+7::
+8::
+9::
+{
+	FuncEsc()
+}
+
+
+$f6::f4
+
+$f4::{
+    Send("{f2}")
+}
+
+
+$f2::
+$m::
+$v::
+$c::
+$b::
+$n::{
+    KeyM := A_ThisHotkey
+    ; ToolTip(KeyM, 940, 1000, id_test)
+    CloseAll()
+    if (KeyM = "$f2") {
+        Send("{l}")
+    } else if (KeyM == "$m") {
+        SwitchStateM()
+    } else if (KeyM == "$v") {
+        Send("{c}")
+    } else if (KeyM == "$n") {
+        Send("{v}")
+    } else if (KeyM == "$b") {
+        Send("{b}")
+    } else if (KeyM == "$c") {
+        Send("{x}")
+    }
+}
+
+
+~$*RButton::{
+    SetTimer(FuncClickR, 100)
+    ToolTip("RB", tips_x+tips_step*id_Mr, tips_y, id_Mr)
+}
+RButton Up::{
+    SetTimer(FuncClickR, 0)
+    ToolTip("", 0, 0, id_Mr)
+}
+
+*x::{
+    SwitchStateX()
+}
+*g::{
+    SwitchStateF()
+}
+
+
+WheelDown::{
+    Send("{WheelDown 10}")
+}
+WheelUp::{
+    Send("{WheelUp 10}")
+}
+
